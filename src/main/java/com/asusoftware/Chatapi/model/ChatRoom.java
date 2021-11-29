@@ -23,12 +23,12 @@ public class ChatRoom {
 
     @OneToMany(mappedBy="chatRoom")
     private List<ChatMessage> messages;
-/*
+
     @OneToOne
     @JoinColumn(name="sender_id", nullable=false)
-    private User senderId;
+    private User sender;
 
     @OneToOne
     @JoinColumn(name="recipient_id", nullable=false)
-    private User recipientId; */
+    private User recipient;
 }

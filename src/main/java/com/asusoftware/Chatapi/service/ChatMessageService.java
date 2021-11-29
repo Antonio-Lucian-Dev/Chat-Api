@@ -2,8 +2,10 @@ package com.asusoftware.Chatapi.service;
 
 import com.asusoftware.Chatapi.model.ChatMessage;
 import com.asusoftware.Chatapi.model.MessageStatus;
+import com.asusoftware.Chatapi.model.User;
 import com.asusoftware.Chatapi.repository.ChatMessageRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.hibernate.Criteria;
 import org.hibernate.sql.Update;
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomService chatRoomService;
@@ -27,19 +29,19 @@ public class ChatMessageService {
         return chatMessage;
     }
 
-    public long countNewMessages(String senderId, String recipientId) {
+    public long countNewMessages(UUID senderId, UUID recipientId) {
         return chatMessageRepository.countBySenderIdAndRecipientIdAndStatus(
                 senderId, recipientId, MessageStatus.RECEIVED);
     }
 
-    public List<ChatMessage> findChatMessages(UUID senderId, UUID recipientId) {
-        var chatId = chatRoomService.getChatId(senderId, recipientId, false);
+    public List<ChatMessage> findChatMessages(User sender, User recipient) {
+        var chatRoom = chatRoomService.getChatId(sender, recipient, false).orElse(null);
 
-        var messages =
-                chatId.map(chatMessageRepository::findByChatId).orElse(new ArrayList<>());
+        List<ChatMessage> messages =  chatMessageRepository.findByChatId(chatRoom.getId());
+
 
         if(messages.size() > 0) {
-            updateStatuses(senderId, recipientId, MessageStatus.DELIVERED);
+            updateStatuses(sender.getId(), recipient.getId(), MessageStatus.DELIVERED);
         }
 
         return messages;

@@ -2,9 +2,11 @@ package com.asusoftware.Chatapi.controller;
 
 import com.asusoftware.Chatapi.model.ChatMessage;
 import com.asusoftware.Chatapi.model.ChatNotification;
+import com.asusoftware.Chatapi.model.User;
 import com.asusoftware.Chatapi.service.ChatMessageService;
 import com.asusoftware.Chatapi.service.ChatRoomService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.UUID;
 
 @Controller
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -29,37 +31,38 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
-        var chatId = chatRoomService
-                .getChatId(chatMessage.getSenderId(), chatMessage.getRecipientId(), true);
-        chatMessage.setChatId(chatId.get());
+        var chatRoom = chatRoomService
+                .getChatId(chatMessage.getSender(), chatMessage.getRecipient(), true).orElse(null);
+
+        chatMessage.setChatRoom(chatRoom);
 
         ChatMessage saved = chatMessageService.save(chatMessage);
 
+        // Creeaza notificarea pentru user
         ChatNotification chatNotification = new ChatNotification();
         chatNotification.setId(saved.getId());
-        chatNotification.setSenderId(saved.getSenderId());
-        chatNotification.setSenderName(saved.getSenderName());
+        chatNotification.setSender(saved.getSender());
 
         // The convertAndSendToUser will append recipient id to /queue/messages, and also it will append the configured user
         // destination prefix /user at the beginning. The final destination will look like:
         //   /user/{recipientId}/queue/messages
         messagingTemplate.convertAndSendToUser(
-                chatMessage.getRecipientId(),"/queue/messages",
+                chatMessage.getRecipient().getId().toString(),"/queue/messages",
                chatNotification);
     }
 
     @GetMapping("/messages/{senderId}/{recipientId}/count")
     public ResponseEntity<Long> countNewMessages(
-            @PathVariable String senderId,
-            @PathVariable String recipientId) {
+            @PathVariable UUID senderId,
+            @PathVariable UUID recipientId) {
 
         return ResponseEntity
                 .ok(chatMessageService.countNewMessages(senderId, recipientId));
     }
 
     @GetMapping("/messages/{senderId}/{recipientId}")
-    public ResponseEntity<?> findChatMessages ( @PathVariable UUID senderId,
-                                                @PathVariable UUID recipientId) {
+    public ResponseEntity<?> findChatMessages ( @PathVariable User senderId,
+                                                @PathVariable User recipientId) {
         return ResponseEntity
                 .ok(chatMessageService.findChatMessages(senderId, recipientId));
     }

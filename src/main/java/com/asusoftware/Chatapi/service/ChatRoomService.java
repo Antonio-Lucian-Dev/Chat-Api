@@ -1,48 +1,43 @@
 package com.asusoftware.Chatapi.service;
 
 import com.asusoftware.Chatapi.model.ChatRoom;
+import com.asusoftware.Chatapi.model.User;
 import com.asusoftware.Chatapi.repository.ChatRoomRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
 
-    public Optional<UUID> getChatId(
-            UUID senderId, UUID recipientId, boolean createIfNotExist) {
+    public Optional<ChatRoom> getChatId(
+            User sender, User recipient, boolean createIfNotExist) {
 
         return chatRoomRepository
-                .findBySenderIdAndRecipientId(senderId, recipientId)
-                .map(ChatRoom::getChatId)
-                .or(() -> {
+                // Cauta chatul folosing id la useri
+                .findBySenderIdAndRecipientId(sender.getId(), recipient.getId())
+                .or(() -> {  // Daca nu, creeaza un nou chat room
                     if(!createIfNotExist) {
                         return  Optional.empty();
                     }
-                    var chatId =
-                            String.format("%s_%s", senderId, recipientId);
 
+                    UUID chatId = UUID.randomUUID();
 
-                    ChatRoom senderRecipient = new ChatRoom();
-                    senderRecipient.setChatId(chatId);
-                    senderRecipient.setSenderId(senderId);
-                    senderRecipient.setRecipientId(recipientId);
+                    // Creez chat room-ul
+                    ChatRoom newChatRoom = new ChatRoom();
+                    newChatRoom.setId(chatId);
+                    newChatRoom.setSender(sender);
+                    newChatRoom.setRecipient(recipient);
 
-                    ChatRoom recipientSender = new ChatRoom();
-                    recipientSender.setChatId(chatId);
-                    recipientSender.setSenderId(senderId);
-                    recipientSender.setRecipientId(recipientId);
+                    chatRoomRepository.save(newChatRoom);
 
-
-                    chatRoomRepository.save(senderRecipient);
-                    chatRoomRepository.save(recipientSender);
-
-                    return Optional.of(chatId);
+                    return Optional.of(newChatRoom);
                 });
     }
 }
