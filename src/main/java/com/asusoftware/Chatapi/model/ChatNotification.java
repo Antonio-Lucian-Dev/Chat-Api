@@ -16,9 +16,7 @@ public class ChatNotification {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "sender_id")
-    private UUID senderId;
-
-    @Column(name = "sender_name")
-    private String senderName;
+    @ManyToOne
+    @JoinColumn(name="sender_id", nullable=false)
+    private User sender;
 }

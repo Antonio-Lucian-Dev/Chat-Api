@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -17,26 +17,23 @@ public class ChatMessage {
         @GeneratedValue
         private UUID id;
 
-        @Column(name = "chat_id")
-        private UUID chatId;
+        @ManyToOne
+        @JoinColumn(name="chat_id", nullable=false)
+        private ChatRoom chatRoom;
 
-        @Column(name = "sender_id")
-        private UUID senderId;
+        @ManyToOne
+        @JoinColumn(name="sender_id", nullable=false)
+        private User sender;
 
-        @Column(name = "recipient_id")
-        private UUID recipientId;
-
-        @Column(name = "sender_name")
-        private String senderName;
-
-        @Column(name = "recipient_name")
-        private String recipientName;
+        @ManyToOne
+        @JoinColumn(name="recipient_id", nullable=false)
+        private User recipient;
 
         @Column(name = "content")
         private String content;
 
-        @Column(name = "send_at")
-        private Date timestamp;
+        @Column(name = "created_at")
+        private LocalDateTime created_at;
 
         @Enumerated(EnumType.STRING)
         @Column(name = "message_status")

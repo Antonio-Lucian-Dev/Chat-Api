@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.UUID;
 
 @Setter
@@ -20,12 +21,14 @@ public class ChatRoom {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "chat_id")
-    private UUID chatId;
+    @OneToMany(mappedBy="chatRoom")
+    private List<ChatMessage> messages;
+/*
+    @OneToOne
+    @JoinColumn(name="sender_id", nullable=false)
+    private User senderId;
 
-    @Column(name = "sender_id")
-    private UUID senderId;
-
-    @Column(name = "recipient_id")
-    private UUID recipientId;
+    @OneToOne
+    @JoinColumn(name="recipient_id", nullable=false)
+    private User recipientId; */
 }
