@@ -35,8 +35,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setAllowedOrigins("*")
-                .withSockJS();
+                .setAllowedOrigins("*");
+        // . withSocketJs();
+
     }
 
     // The last method, configures a JSON message converter, which is used by Spring to convert chat messages from/to JSON.
